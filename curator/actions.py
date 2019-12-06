@@ -2425,10 +2425,11 @@ class Shrink(object):
                     self._check_all_shards(idx)
                     # Block writes on index
                     self._block_writes(idx)
-                    # Do final health check
-                    if not utils.health_check(self.client, status='green'):
-                        raise exceptions.ActionError(
-                            'Unable to proceed with shrink action. Cluster health is not "green"')
+                    # Wait for cluster to be green
+                    utils.wait_for_it(
+                        self.client, 'shrink', wait_interval=self.wait_interval,
+                        max_wait=self.max_wait
+                    )
                     # Do the shrink
                     self.loggit.info(
                         'Shrinking index "{0}" to "{1}" with settings: {2}, wait_for_active_shards'
